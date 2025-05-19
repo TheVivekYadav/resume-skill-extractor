@@ -1,20 +1,21 @@
-from fastapi import APIRouter, HTTPException
-from ..controllers.user_controller import UserController
-from ..models.user import User
+from fastapi import APIRouter, Depends, Response
+from app.models.user import User, UserLogin
+from app.controllers import user_controller
 
 router = APIRouter()
 
-@router.get("/users", response_model=list[User])
-def get_users():
-    return UserController.get_users()
+@router.post("/register")
+async def register(user: User):
+    return await user_controller.register_user(user)
 
-@router.get("/users/{user_id}", response_model=User)
-def get_user(user_id: int):
-    user = UserController.get_user(user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+@router.post("/login")
+async def login(user: UserLogin):
+    return await user_controller.login_user(user)
 
-@router.post("/users", response_model=User)
-def create_user(user: User):
-    return UserController.create_user(user) 
+@router.get("/me")
+async def read_current_user(current_user: dict = Depends(user_controller.get_current_user)):
+    return current_user
+
+@router.post("/logout")
+def logout():
+    return user_controller.logout_user()
