@@ -1,10 +1,10 @@
+import { Alert, Button, Card, Input } from "@mui/material";
+import { Lock, LogIn, Mail, User, UserCheck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
-
     const apiUrl = import.meta.env.VITE_API_URL;
-
     const navigate = useNavigate();
 
     const [isLogin, setIsLogin] = useState(true);
@@ -16,24 +16,18 @@ export default function Login() {
     });
     const [message, setMessage] = useState("");
 
-
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     useEffect(() => {
-        // Example: Replace this with your real auth check (API call, context, etc.)
         const checkAuth = async () => {
-            // For cookie-based auth, you might call /api/me or similar
             const response = await fetch(`${apiUrl}/api/me`, {
                 credentials: "include",
             });
-            console.log(response)
             if (response.ok) {
-                // User is authenticated
                 navigate("/dashboard", { replace: true });
             }
-            // else, stay on login page
         };
         checkAuth();
     }, [navigate]);
@@ -41,7 +35,6 @@ export default function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
-        // LOGIN: POST to /api/login with username and password
         try {
             const response = await fetch(`${apiUrl}/api/login`, {
                 method: "POST",
@@ -55,98 +48,148 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Login successful!");
-                console.log(data)
                 setTimeout(() => {
                     navigate("/dashboard");
                 }, 1000);
-                // You can store token or redirect here
             } else {
                 setMessage(data.message || "Login failed.");
             }
         } catch (err) {
             setMessage("Network error.");
         }
-    }
+    };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 to-blue-200">
-            <div className="bg-white shadow-lg rounded-lg w-full max-w-md p-8">
-                <div className="flex justify-center mb-6">
-                    <button
+        <div
+            style={{
+                minHeight: "100vh",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                padding: "1rem",
+            }}
+        >
+            <Card
+                sx={{
+                    maxWidth: 400,
+                    width: "100%",
+                    padding: "2rem",
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.25)",
+                }}
+            >
+                <div style={{ display: "flex", marginBottom: "1rem" }}>
+                    <Button
+                        startIcon={<LogIn />}
+                        variant={isLogin ? "contained" : "outlined"}
                         onClick={() => setIsLogin(true)}
-                        className={`px-4 py-2 rounded-l-lg font-semibold transition ${isLogin ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700"
-                            }`}
+                        sx={{ flex: 1, marginRight: "0.25rem" }}
                     >
                         Login
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        startIcon={<UserPlus />}
+                        variant={!isLogin ? "contained" : "outlined"}
                         onClick={() => setIsLogin(false)}
-                        className={`px-4 py-2 rounded-r-lg font-semibold transition ${!isLogin ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700"
-                            }`}
+                        sx={{ flex: 1, marginLeft: "0.25rem" }}
                     >
                         Register
-                    </button>
+                    </Button>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     {!isLogin && (
                         <>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={form.name}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                />
-                            </div>
+                            <InputLabelWithIcon label="Name" icon={<User />} htmlFor="name" />
+                            <Input
+                                id="name"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                required
+                                placeholder="Your full name"
+                                sx={{
+                                    paddingLeft: 3,
+                                    "& input": { paddingLeft: "1.5rem" },
+                                }}
+                                startAdornment={<User size={16} style={{ marginRight: 8, color: "#666" }} />}
+                            />
+                            <InputLabelWithIcon label="Email" icon={<Mail />} htmlFor="email" />
+                            <Input
+                                id="email"
+                                type="email"
+                                name="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="you@example.com"
+                                sx={{
+                                    paddingLeft: 3,
+                                    "& input": { paddingLeft: "1.5rem" },
+                                }}
+                                startAdornment={<Mail size={16} style={{ marginRight: 8, color: "#666" }} />}
+                            />
                         </>
                     )}
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Username</label>
-                        <input
-                            type="text"
-                            name="username"
-                            value={form.username}
-                            onChange={handleChange}
-                            required
-                            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Password</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleChange}
-                            required
-                            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="w-full py-2 bg-indigo-600 text-white rounded font-semibold hover:bg-indigo-700 transition"
-                    >
+
+                    <InputLabelWithIcon label="Username" icon={<UserCheck />} htmlFor="username" />
+                    <Input
+                        id="username"
+                        name="username"
+                        value={form.username}
+                        onChange={handleChange}
+                        required
+                        placeholder="Username"
+                        sx={{
+                            paddingLeft: 3,
+                            "& input": { paddingLeft: "1.5rem" },
+                        }}
+                        startAdornment={<UserCheck size={16} style={{ marginRight: 8, color: "#666" }} />}
+                    />
+                    <InputLabelWithIcon label="Password" icon={<Lock />} htmlFor="password" />
+                    <Input
+                        id="password"
+                        type="password"
+                        name="password"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                        placeholder="Password"
+                        sx={{
+                            paddingLeft: 3,
+                            "& input": { paddingLeft: "1.5rem" },
+                        }}
+                        startAdornment={<Lock size={16} style={{ marginRight: 8, color: "#666" }} />}
+                    />
+                    <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
                         {isLogin ? "Login" : "Register"}
-                    </button>
+                    </Button>
                 </form>
                 {message && (
-                    <div className="mt-4 text-center text-sm text-red-500">{message}</div>
+                    <Alert severity={message.includes("successful") ? "success" : "error"} sx={{ mt: 2 }}>
+                        {message}
+                    </Alert>
                 )}
-            </div>
+            </Card>
         </div>
     );
-};
+}
+
+// Helper component for input labels with icons
+function InputLabelWithIcon({ label, icon, htmlFor }) {
+    return (
+        <label
+            htmlFor={htmlFor}
+            style={{
+                display: "flex",
+                alignItems: "center",
+                fontWeight: 600,
+                marginBottom: 4,
+                color: "#333",
+            }}
+        >
+            {icon}
+            <span style={{ marginLeft: 6 }}>{label}</span>
+        </label>
+    );
+}
+
