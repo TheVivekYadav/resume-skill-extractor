@@ -1,10 +1,10 @@
-import { Card, CircularProgress } from "@mui/material"; // Using MUI for styled components
-import { LogOut } from "lucide-react"; // Importing the LogOut icon from Lucide React
+import { Card, CircularProgress } from "@mui/material";
+import { LogOut } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Logout = () => {
-  const apiUrl = import.meta.env.VITE_API_URL
+  const apiUrl = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,14 +17,15 @@ const Logout = () => {
             "Content-Type": "application/json",
           },
         });
+      } catch (err) {
+        console.error("Logout failed:", err);
       } finally {
-        localStorage.removeItem("accessToken");
         navigate("/login", { replace: true });
       }
     };
 
     logout();
-  }, [navigate]);
+  }, [navigate, apiUrl]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
