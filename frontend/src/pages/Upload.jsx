@@ -1,7 +1,30 @@
-"use client"
+import { AlertCircle, CheckCircle, FileIcon, UploadCloud, X } from "lucide-react"
+import { useRef, useState } from "react"
 
-import { useState, useRef } from "react"
-import { FileIcon, UploadCloud, X, AlertCircle, CheckCircle } from "lucide-react"
+function fetchWithProgress(url, options, totalSize, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open(options.method || "POST", url)
+    xhr.withCredentials = options.credentials === "include"
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && onProgress) {
+        onProgress(Math.round((event.loaded * 100) / totalSize))
+      }
+    }
+
+    xhr.onload = () => {
+      const response = new Response(xhr.responseText, {
+        status: xhr.status,
+        statusText: xhr.statusText,
+      })
+      resolve(response)
+    }
+
+    xhr.onerror = () => reject(new TypeError("Network request failed"))
+    xhr.send(options.body)
+  })
+}
 
 export default function Upload() {
   const [file, setFile] = useState(null)
@@ -58,35 +81,30 @@ export default function Upload() {
     formData.append("file", file)
 
     try {
-      const xhr = new XMLHttpRequest()
-      xhr.open("POST", "http://localhost:8000/upload", true)
-      xhr.withCredentials = true // send cookies if needed
+      const res = await fetchWithProgress(
+        "https://localhost:8000/upload",
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include", // send cookies
+        },
+        file.size,
+        setProgress
+      )
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setProgress(Math.round((event.loaded * 100) / event.total))
-        }
+      if (res.ok) {
+        setMessage("File uploaded successfully!")
+        setFile(null)
+      } else {
+        const errorText = await res.text()
+        console.error("Upload failed:", errorText)
+        setMessage("Upload failed.")
       }
-
-      xhr.onload = () => {
-        setUploading(false)
-        if (xhr.status === 200) {
-          setMessage("File uploaded successfully!")
-          setFile(null)
-        } else {
-          setMessage("Upload failed.")
-        }
-      }
-
-      xhr.onerror = () => {
-        setUploading(false)
-        setMessage("Upload failed. Please try again.")
-      }
-
-      xhr.send(formData)
     } catch (error) {
-      setUploading(false)
+      console.error("Upload error:", error)
       setMessage("Upload failed. Please try again.")
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -112,13 +130,12 @@ export default function Upload() {
     <div className="w-full">
       <form onSubmit={handleUpload} className="w-full">
         <div
-          className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
-            dragActive
+          className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${dragActive
               ? "border-blue-500 bg-blue-50"
               : file
                 ? "border-gray-300 bg-gray-50"
                 : "border-gray-300 hover:border-gray-400"
-          }`}
+            }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -180,9 +197,8 @@ export default function Upload() {
           <button
             type="submit"
             disabled={uploading || !file}
-            className={`w-full py-2 px-4 rounded-md text-white font-medium transition ${
-              uploading || !file ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
+            className={`w-full py-2 px-4 rounded-md text-white font-medium transition ${uploading || !file ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+              }`}
           >
             {uploading ? "Uploading..." : "Upload File"}
           </button>
@@ -190,9 +206,8 @@ export default function Upload() {
 
         {message && (
           <div
-            className={`mt-4 p-3 rounded-md flex items-center ${
-              message.includes("success") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-            }`}
+            className={`mt-4 p-3 rounded-md flex items-center ${message.includes("success") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+              }`}
           >
             {message.includes("success") ? (
               <CheckCircle className="h-5 w-5 mr-2" />

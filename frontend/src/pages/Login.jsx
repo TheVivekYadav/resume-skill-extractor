@@ -48,6 +48,7 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 setMessage("Login successful!");
+		    console.log('Login Success')
                 setTimeout(() => {
                     navigate("/dashboard");
                 }, 1000);

@@ -13,7 +13,7 @@ export default function AllFiles() {
       setLoading(true);
       setError("");
       try {
-        const response = await fetch("http://localhost:8000/files", {
+        const response = await fetch("https://localhost:8000/files", {
           credentials: "include", // Send cookies for authentication
         });
         if (!response.ok) {
@@ -36,7 +36,7 @@ export default function AllFiles() {
     setModalLoading(true);
     setModalContent(null);
     try {
-      const response = await fetch(`http://localhost:8000/file/${fileId}`, {
+      const response = await fetch(`https://localhost:8000/file/${fileId}`, {
         credentials: "include",
       });
       if (!response.ok) {
