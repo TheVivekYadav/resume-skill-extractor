@@ -45,6 +45,7 @@ async def login_user(user: UserLogin):
         key="access_token",
         value=token,
         httponly=True,
+        path="/",
         secure=True,
         samesite="None"
     )
@@ -101,6 +102,7 @@ def logout_user():
     response.delete_cookie(
         key="access_token",
         secure=True,
+        path="/",
         httponly=True,
         samesite="None"
     )
