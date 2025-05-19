@@ -6,6 +6,7 @@ import Login from '../pages/Login';
 import Logout from '../pages/Logout';
 import NotFound from '../pages/NotFound';
 import Status from '../pages/Status';
+import AllFiles from '../pages/AllFiles';
 
 export const router = createBrowserRouter([
   {
@@ -37,6 +38,11 @@ export const router = createBrowserRouter([
         index: true,
         element: <Logout />
       },
+	    {
+		    path: "files",
+		    index: true,
+		    element: <AllFiles />
+	    },
       {
         path: '*',
         element: <NotFound />,
