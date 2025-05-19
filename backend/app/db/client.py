@@ -1,5 +1,10 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
-client = AsyncIOMotorClient("mongodb://admin:admin@localhost:27017/?authSource=admin")
+MONGO_URI = os.getenv("MONGO_URI")
+
+client = AsyncIOMotorClient(MONGO_URI)
 db = client["auth_db"]
 user_collection = db["users"]
