@@ -26,7 +26,7 @@ export default function Login() {
             const response = await fetch("http://localhost:3001/api/me", {
                 credentials: "include",
             });
-		console.log(response);
+            console.log(response)
             if (response.ok) {
                 // User is authenticated
                 navigate("/dashboard", { replace: true });
