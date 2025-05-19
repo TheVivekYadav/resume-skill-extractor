@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import Upload from '../pages/Upload';
 
 export default function Dashboard() {
+
+    const apiUrl = import.meta.env.VITE_API_URL;
+
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
@@ -10,7 +13,7 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await fetch("http://localhost:3001/api/me", {
+                const response = await fetch(`${apiUrl}/api/me`, {
                     credentials: "include", // Important for cookie-based auth
                 });
                 if (response.ok) {
@@ -56,7 +59,13 @@ export default function Dashboard() {
                     <span className="font-semibold text-gray-700">Email:</span>
                     <span className="ml-2 text-gray-900">{user.email}</span>
                 </div>
-                <Upload/>
+                <Upload />
+                <button
+                    onClick={() => navigate("/files")}
+                    className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded transition"
+                >
+                    View All Files
+                </button>
             </div>
         </div>
     );

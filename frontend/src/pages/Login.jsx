@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Login() {
 
+    const apiUrl = import.meta.env.VITE_API_URL;
+
     const navigate = useNavigate();
 
     const [isLogin, setIsLogin] = useState(true);
@@ -23,7 +25,7 @@ export default function Login() {
         // Example: Replace this with your real auth check (API call, context, etc.)
         const checkAuth = async () => {
             // For cookie-based auth, you might call /api/me or similar
-            const response = await fetch("http://localhost:3001/api/me", {
+            const response = await fetch(`${apiUrl}/api/me`, {
                 credentials: "include",
             });
             console.log(response)
@@ -41,7 +43,7 @@ export default function Login() {
         setMessage("");
         // LOGIN: POST to /api/login with username and password
         try {
-            const response = await fetch("http://localhost:3001/api/login", {
+            const response = await fetch(`${apiUrl}/api/login`, {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
