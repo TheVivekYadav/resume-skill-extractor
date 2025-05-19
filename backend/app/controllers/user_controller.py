@@ -6,13 +6,12 @@ from ..db.collections.user_collection import user_collection
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
-from motor.motor_asyncio import AsyncIOMotorCollection  # async MongoDB collection
 from typing import Optional
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 10
 
 def hash_password(password: str):
     return pwd_context.hash(password)
@@ -93,11 +92,16 @@ async def get_current_user(request: Request) -> dict:
     return {
         "id": str(user["_id"]),
         "username": user["username"],
-        "email": user.get("email")  # safer if email can be missing
+        "email": user.get("email")
     }
 
 
 def logout_user():
     response = JSONResponse(content={"message": "Logged out successfully"})
-    response.delete_cookie("access_token")
+    response.delete_cookie(
+        key="access_token",
+        secure=True,
+        httponly=True,
+        samesite="None"
+    )
     return response
