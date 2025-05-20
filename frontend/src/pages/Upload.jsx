@@ -3,6 +3,11 @@
 import { useState, useRef } from "react"
 import { FileIcon, UploadCloud, X, AlertCircle, CheckCircle } from "lucide-react"
 
+// Use Vite or Next.js environment variable
+// For Vite: import.meta.env.VITE_API_URL
+// For Next.js: process.env.NEXT_PUBLIC_API_URL
+const API_URL ="https://52.20.217.81:8000";
+
 export default function Upload() {
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
@@ -23,7 +28,6 @@ export default function Upload() {
   const handleDrag = (e) => {
     e.preventDefault()
     e.stopPropagation()
-
     if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true)
     } else if (e.type === "dragleave") {
@@ -35,7 +39,6 @@ export default function Upload() {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0])
       setMessage("")
@@ -58,9 +61,11 @@ export default function Upload() {
     formData.append("file", file)
 
     try {
+      const userId = localStorage.getItem("_id");
       const xhr = new XMLHttpRequest()
-      xhr.open("POST", "http://localhost:8000/upload", true)
-      xhr.withCredentials = true // send cookies if needed
+      xhr.open("POST", `${API_URL}/upload`, true)
+      xhr.setRequestHeader("X-User-ID", userId);
+      xhr.withCredentials = true
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
@@ -124,7 +129,12 @@ export default function Upload() {
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <input ref={fileInputRef} type="file" onChange={handleFileChange} className="hidden" />
+          <input
+            ref={fileInputRef}
+            type="file"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
           {!file ? (
             <div className="flex flex-col items-center justify-center py-4">
@@ -206,3 +216,4 @@ export default function Upload() {
     </div>
   )
 }
+

@@ -1,5 +1,102 @@
 import React, { useEffect, useState } from "react";
 
+const API_URL = "https://52.20.217.81:8000"
+
+// Helper: Modal for interactive step-by-step skill review
+function InteractiveSkillModal({ rawResult, onClose }) {
+  // Parse stringified JSON if needed
+  function parseSkillResult(result) {
+    if (!result) return {};
+    if (typeof result === "string") {
+      try {
+        return JSON.parse(result);
+      } catch (e) {
+        return {};
+      }
+    }
+    return result;
+  }
+
+  const skillResult = parseSkillResult(rawResult.result ? rawResult.result : rawResult);
+  const { feedback, ...categories } = skillResult;
+  const categoryEntries = Object.entries(categories);
+  const [step, setStep] = useState(0);
+
+  if (categoryEntries.length === 0) {
+    return (
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-indigo-700">Skills Extracted</h3>
+        <div className="text-gray-500 mb-4">No skills found.</div>
+        {feedback && <FeedbackBox feedback={feedback} />}
+        <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded" onClick={onClose}>Close</button>
+      </div>
+    );
+  }
+
+  const [currentCategory, skills] = categoryEntries[step];
+
+  return (
+    <div>
+      <h3 className="text-lg font-bold mb-4 text-indigo-700">Skills Extracted</h3>
+      <div className="mb-4">
+        <div className="font-semibold mb-1 capitalize">
+          {currentCategory.replace(/_/g, " ")}:
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {Array.isArray(skills) && skills.length > 0 ? (
+            skills.map((skill, idx) => (
+              <span
+                key={idx}
+                className={
+                  currentCategory.toLowerCase().includes("soft")
+                    ? "bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium"
+                    : "bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium"
+                }
+              >
+                {skill}
+              </span>
+            ))
+          ) : (
+            <span className="text-gray-500">None</span>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-2 mt-4">
+        <button
+          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+          onClick={() => setStep((s) => s - 1)}
+          disabled={step === 0}
+        >
+          Back
+        </button>
+        <button
+          className="px-3 py-1 bg-indigo-600 text-white rounded disabled:opacity-50"
+          onClick={() => setStep((s) => s + 1)}
+          disabled={step === categoryEntries.length - 1}
+        >
+          Next
+        </button>
+      </div>
+      {/* Show feedback only at the end */}
+      {step === categoryEntries.length - 1 && feedback && (
+        <FeedbackBox feedback={feedback} />
+      )}
+      <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded" onClick={onClose}>
+        Close
+      </button>
+    </div>
+  );
+}
+
+function FeedbackBox({ feedback }) {
+  return (
+    <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded">
+      <strong>Feedback:</strong>
+      <div className="mt-2 whitespace-pre-line">{feedback}</div>
+    </div>
+  );
+}
+
 export default function AllFiles() {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -9,12 +106,17 @@ export default function AllFiles() {
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
+    const userId = localStorage.getItem("_id");
     const fetchFiles = async () => {
       setLoading(true);
       setError("");
       try {
-        const response = await fetch("http://localhost:8000/files", {
-          credentials: "include", // Send cookies for authentication
+        const response = await fetch(`${API_URL}/files`, {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-ID": userId,
+          },
         });
         if (!response.ok) {
           throw new Error("Failed to fetch files");
@@ -32,12 +134,16 @@ export default function AllFiles() {
   }, []);
 
   const handleViewResult = async (fileId) => {
+    const token = localStorage.getItem("access_token");
     setModalOpen(true);
     setModalLoading(true);
     setModalContent(null);
     try {
-      const response = await fetch(`http://localhost:8000/file/${fileId}`, {
+      const response = await fetch(`${API_URL}/file/${fileId}`, {
         credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (!response.ok) {
         throw new Error("Failed to fetch file result");
@@ -96,7 +202,7 @@ export default function AllFiles() {
         </table>
       )}
 
-      {/* Modal for Result */}
+      {/* Modal for Interactive Result */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded shadow-lg p-6 max-w-2xl w-full relative">
@@ -110,64 +216,9 @@ export default function AllFiles() {
             {!modalLoading && modalContent && modalContent.error && (
               <div className="text-red-600">{modalContent.error}</div>
             )}
-            {!modalLoading && modalContent && !modalContent.error && (() => {
-              // Parse skills from stringified JSON if needed
-              let techSkills = [];
-              let softSkills = [];
-              if (modalContent) {
-                if (typeof modalContent.result === "string") {
-                  try {
-                    const parsed = JSON.parse(modalContent.result);
-                    techSkills = parsed.technical_skills || [];
-                    softSkills = parsed.soft_skills || [];
-                  } catch (e) {
-                    // parsing failed, leave arrays empty
-                  }
-                } else {
-                  techSkills = modalContent.technical_skills || [];
-                  softSkills = modalContent.soft_skills || [];
-                }
-              }
-              return (
-                <div>
-                  <h3 className="text-lg font-bold mb-4 text-indigo-700">Skills Extracted</h3>
-                  <div className="mb-4">
-                    <div className="font-semibold mb-1">Technical Skills:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {techSkills.length > 0 ? (
-                        techSkills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">None</span>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-semibold mb-1">Soft Skills:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {softSkills.length > 0 ? (
-                        softSkills.map((skill, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium"
-                          >
-                            {skill}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500">None</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
+            {!modalLoading && modalContent && !modalContent.error && (
+              <InteractiveSkillModal rawResult={modalContent} onClose={closeModal} />
+            )}
           </div>
         </div>
       )}

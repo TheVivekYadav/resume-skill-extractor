@@ -129,6 +129,7 @@ export default function Dashboard() {
                                 <div className="flex justify-between py-2">
                                     <span className="text-gray-600">User ID:</span>
                                     <span className="font-medium">{user.id}</span>
+	    {localStorage.setItem("_id",user.id)}
                                 </div>
                                 <button className="mt-4 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition">
                                     Edit Profile

@@ -1,5 +1,5 @@
 import { Alert, Button, Card, Input } from "@mui/material";
-import { Lock, LogIn, Mail, User, UserCheck, UserPlus } from "lucide-react";
+import { Lock, LogIn, Mail, UserCheck, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -36,23 +36,48 @@ export default function Login() {
         e.preventDefault();
         setMessage("");
         try {
-            const response = await fetch(`${apiUrl}/api/login`, {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    username: form.username,
-                    password: form.password,
-                }),
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setMessage("Login successful!");
-                setTimeout(() => {
-                    navigate("/dashboard");
-                }, 1000);
+            if (isLogin) {
+                // Login logic
+                const response = await fetch(`${apiUrl}/api/login`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: form.username,
+                        password: form.password,
+                    }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setMessage("Login successful!");
+                    setTimeout(() => {
+                        navigate("/dashboard");
+                    }, 1000);
+                } else {
+                    setMessage(data.message || "Login failed.");
+                }
             } else {
-                setMessage(data.message || "Login failed.");
+                // Register logic
+                const response = await fetch(`${apiUrl}/api/register`, {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        username: form.username,
+                        email: form.email,
+                        password: form.password,
+                    }),
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setMessage("Registration successful! You can now log in.");
+                    setTimeout(() => {
+                        setIsLogin(true);
+                        setMessage("");
+                    }, 1500);
+                } else {
+                    setMessage(data.message || "Registration failed.");
+                }
             }
         } catch (err) {
             setMessage("Network error.");
@@ -99,20 +124,6 @@ export default function Login() {
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                     {!isLogin && (
                         <>
-                            <InputLabelWithIcon label="Name" icon={<User />} htmlFor="name" />
-                            <Input
-                                id="name"
-                                name="name"
-                                value={form.name}
-                                onChange={handleChange}
-                                required
-                                placeholder="Your full name"
-                                sx={{
-                                    paddingLeft: 3,
-                                    "& input": { paddingLeft: "1.5rem" },
-                                }}
-                                startAdornment={<User size={16} style={{ marginRight: 8, color: "#666" }} />}
-                            />
                             <InputLabelWithIcon label="Email" icon={<Mail />} htmlFor="email" />
                             <Input
                                 id="email"
