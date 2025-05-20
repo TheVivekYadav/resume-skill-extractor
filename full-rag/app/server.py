@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
 from .db.collections.files import FileSchema, files_collection
-# from .dependencies import get_current_user_id
 from .queue.q import q
 from .queue.workers import process_file
 from .utils.file import save_to_disk
@@ -13,7 +12,7 @@ app = FastAPI()
 
 # Allow requests from your frontend
 origins = [
-    "https://localhost:3000",
+    "http://localhost:3000",
     "https://guvihcl-production.up.railway.app"
     
 ]
@@ -57,23 +56,24 @@ async def get_file_by_id(id: str = Path(..., description="ID of the file")):
         "result": db_file["result"] if "result" in db_file else None,
     }
 
-# @app.get("/files", response_model=List[dict])
-# async def get_user_files(user_id: str = Depends(get_current_user_id)):
-#     files_cursor = files_collection.find({"uploaded_by": user_id})
-#     files = []
-#     async for file in files_cursor:
-#         files.append(serialize_file(file))
-#     return files
+@app.get("/files", response_model=List[dict])
+async def get_user_files(request: Request):
+    user_id = request.headers.get("X-User-ID")
+    files_cursor = files_collection.find({"uploaded_by": user_id})
+    files = []
+    async for file in files_cursor:
+        files.append(serialize_file(file))
+    return files
 
 @app.post("/upload")
 async def upload_file(
     request: Request,
     file: UploadFile,
-    # user_id: str = Depends(get_current_user_id)
 ):
-    # access_token = request.cookies.get("access_token")
-    # if not access_token:
-    #     raise HTTPException(status_code=401, detail="Access token missing in cookies vivek")
+    user_id = request.headers.get("X-User-ID")
+    
+    if not user_id:
+        raise HTTPException(status_code=401, detail="UnAuthorized")
     
 
     # print(user_id)
@@ -82,7 +82,7 @@ async def upload_file(
         document=FileSchema(
             name=file.filename,
             status="saving",
-            # uploaded_by=str(user_id)
+            uploaded_by=str(user_id)
         )
     )
 
